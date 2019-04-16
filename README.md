@@ -46,7 +46,7 @@ More information by Ronald on SNP array input :
 
 ## Library
 
-Orcs is useful to write output with filename input.
+tools is useful to write output with filename input.
 
 GenomicsRanges is used to find overlaps between SNP array and bionano
 calls.
@@ -58,7 +58,7 @@ karyoploteR and diffloop are used for data visualization.
 Xlsx is used to produce a excel output file.
 
 ``` r
-library(Orcs)
+library(tools)
 library(tidyr)
 library(dplyr)
 library(GenomicRanges)
@@ -72,6 +72,18 @@ library(xlsx)
 ### Function
 
 #### Preprocessing of raw output file
+
+Get sample name
+
+``` r
+pureBasename <- function(file){
+  require(tools)
+  return(file_path_sans_ext(basename(file)))
+}
+pureBasename("~/SMRT_SV_Project/bionano/array/PN18-1884.txt")
+```
+
+    ## [1] "PN18-1884"
 
 Process CNV output from ChAS
 
@@ -202,10 +214,10 @@ Merge the results from the 2 output file with SNP Array
 ``` r
 nanoarray_cnv_sv <- function(cnv_nanofile, sv_nanofile, arrayfile, hg)
 {
-  require("Orcs")
+  require("tools")
   require("tidyr")
   # get input file names for output file name
-  prefix <- Orcs::pureBasename(sv_nanofile)
+  prefix <- pureBasename(sv_nanofile)
   # merge technologies 
   nanoarraycnv <- nanoarraycnv(cnv_nanofile,arrayfile,hg)
   nanoarraysv <- nanoarraysv(sv_nanofile,arrayfile,hg)
@@ -266,7 +278,7 @@ nano_noarraysv <- function(sv_nanofile,arrayfile,hg)
   require("GenomicRanges")
   # Import file and transform into GenomicsRange 
   arraycnv <- arraycnv(arrayfile,hg)
-  arraycnv.GenomicRanges <- makeGRangesFromDataFrame(arraycnv, keep.extra.columns=TRUE,ignore.strand=TRUE,starts.in.df.are.0based=TRUE)
+  arraycnv.GenomicRanges <- makeGRangesFromDataFrame(arraycnv, keep.extra.columns=TRUE,ignore.strand=TRUE)
   
   nanosv <- nanosv(sv_nanofile,hg)
   nanosv$Chromosome[nanosv$Chromosome == 23] <- "X"
@@ -274,7 +286,7 @@ nano_noarraysv <- function(sv_nanofile,arrayfile,hg)
   colnames(nanosv)[1] <- "chromosome"
   colnames(nanosv)[2] <- "start"
   colnames(nanosv)[3] <- "end"
-  nanosv.GenomicRanges <- makeGRangesFromDataFrame(nanosv, keep.extra.columns=TRUE,ignore.strand=TRUE,starts.in.df.are.0based=TRUE)
+  nanosv.GenomicRanges <- makeGRangesFromDataFrame(nanosv, keep.extra.columns=TRUE,ignore.strand=TRUE)
   
   # Find overlaps between bionano CNV calls and SNP array
   hits <- findOverlaps(arraycnv.GenomicRanges, nanosv.GenomicRanges, type="any")
@@ -292,6 +304,7 @@ nano_noarraysv <- function(sv_nanofile,arrayfile,hg)
   return(nano_noarraysv)
 }
 
+
 #nano_noarraysv(sv_nanofile = "~/SMRT_SV_Project/bionano/bionano_cnv/Sample_2_1300Gb_VAP_SV_all_10kb.csv",arrayfile="~/SMRT_SV_Project/bionano/array/PN18-1884.txt",hg="hg19")
 ```
 
@@ -299,7 +312,7 @@ nano_noarraysv <- function(sv_nanofile,arrayfile,hg)
 
 ``` r
 print_karyoplot <- function(arrayfile, cnv_nanofile, sv_nanofile,hg) {
-  require("Orcs")
+  require("tools")
   require(karyoploteR)
   require(diffloop)
   
@@ -341,7 +354,7 @@ print_karyoplot <- function(arrayfile, cnv_nanofile, sv_nanofile,hg) {
   nanocnv.loss.GenomicRanges <- addchr(nanocnv.loss.GenomicRanges)
   
   # print plot as file
-  prefix <- Orcs::pureBasename(sv_nanofile)
+  prefix <- pureBasename(sv_nanofile)
   tiff(paste0(prefix,"_karyoplotR.tiff"), width = 3440, height = 4000,type="cairo",res=450)
   
   kp <- plotKaryotype(genome=hg)
@@ -391,7 +404,7 @@ xlsx.writeMultipleData <- function (file, ...)
 nanoarray_cnv_sv_statistics <- function(cnv_nanofile, sv_nanofile, arrayfile, hg) {  
   
   # get input file names to get Sample name
-  prefix <- Orcs::pureBasename(sv_nanofile)
+  prefix <- pureBasename(sv_nanofile)
   
   # import data for descriptive statistics
   array_calls <- nanoarray_cnv_sv(cnv_nanofile, sv_nanofile, arrayfile, hg)
@@ -415,7 +428,7 @@ nanoarray_cnv_sv_statistics <- function(cnv_nanofile, sv_nanofile, arrayfile, hg
   results <- data.frame(Sample = prefix, Array_total_calls = total_array, Array_common_calls = common_nanoarray, Array_only_calls = only_array, SV_bionano_total_calls = total_nanosv, SV_bionano_common_calls = common_nanosv , SV_bionano_only_calls = only_nanosv, CNV_bionano_total_calls = total_nanocnv , CNV_bionano_common_calls = common_nanocnv, CNV_bionano_only_calls = only_nanocnv)
   return(results)
 }
-#nanoarray_cnv_sv_statistics(cnv_nanofile= "~/SMRT_SV_Project/bionano/bionano_cnv/Sample_2_subsampled_VAP_CNV_4_3_2019_15_3_46.csv" , sv_nanofile = "~/SMRT_SV_Project/bionano/bionano_cnv/Sample_2_subsampled_VAP_CSV_SV_4_3_2019_15_3_46.csv",arrayfile="~/SMRT_SV_Project/bionano/array/PN18-1884.txt",hg="hg19")
+# nanoarray_cnv_sv_statistics(cnv_nanofile= "~/SMRT_SV_Project/bionano/bionano_cnv/Sample_2_subsampled_VAP_CNV_4_3_2019_15_3_46.csv" , sv_nanofile = "~/SMRT_SV_Project/bionano/bionano_cnv/Sample_2_subsampled_VAP_CSV_SV_4_3_2019_15_3_46.csv",arrayfile="~/SMRT_SV_Project/bionano/array/PN18-1884.txt",hg="hg19")
 ```
 
 #### Complete function with comparison and plot
@@ -424,9 +437,9 @@ nanoarray_cnv_sv_statistics <- function(cnv_nanofile, sv_nanofile, arrayfile, hg
 nanoarray_cnv_sv_plot_statistics <- function(cnv_nanofile, sv_nanofile, arrayfile, hg) {
 
    # get input file names for output file name
-  prefix <- Orcs::pureBasename(sv_nanofile)
-  nanocnv <- Orcs::pureBasename(cnv_nanofile)
-  arrayname <- Orcs::pureBasename(arrayfile)
+  prefix <- pureBasename(sv_nanofile)
+  nanocnv <- pureBasename(cnv_nanofile)
+  arrayname <- pureBasename(arrayfile)
   
   # load processed data with previous functions
   array_calls <- nanoarray_cnv_sv(cnv_nanofile, sv_nanofile, arrayfile, hg)
