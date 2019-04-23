@@ -3,7 +3,7 @@
 ##### Library 
 #tools is useful to write output with filename input.
 #GenomicsRanges is used to find overlaps between SNP array and bionano calls.
-#Tidyr and dplyr are used for data manipulation.
+#Tidyr, stringr and dplyr are used for data manipulation.
 #karyoploteR and diffloop are used for data visualization.
 #Xlsx is used to produce a excel output file.
 
