@@ -10,6 +10,7 @@
 library(tools)
 library(tidyr)
 library(dplyr)
+library(stringr)
 library(GenomicRanges)
 library(karyoploteR)
 library(diffloop)
@@ -43,12 +44,14 @@ pureBasename <- function(file){
 arraycnv <- function(arrayfile,hg)
 {
   require("tidyr")
+  require("stringr")
   arraycnv <- read.delim(arrayfile,sep="\t", header=TRUE, na.strings = "", fill=TRUE)
   arraycnv_clean <- arraycnv %>%
     separate(col= Microarray.Nomenclature..ISCN.2016.,sep="\\(",into=c("Cytoband","coordinate")) %>%
     separate(col= coordinate,sep="\\)",into=c("startend","Copy.Number")) %>%
     separate(col= startend,sep="\\_",into=c("Start","End")) %>%
     dplyr::select(Chromosome,Start,End, Type, CN.State, Size..kbp.,Marker.Count,Gene.Count,Genes,File)
+    filter(!str_detect(End," or"))
   arraycnv_clean <- tibble::rowid_to_column(arraycnv_clean, "CNV.array.ID")
   return(arraycnv_clean)
 }

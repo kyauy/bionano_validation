@@ -1,0 +1,74 @@
+---
+title: "Compound htz and bi allelic coding SV"
+author: "Kevin Yauy"
+output:   
+  github_document:
+    toc: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Radboudumc
+
+Date of publication : `r Sys.Date()`
+
+## Library
+```{r message=FALSE, warning=FALSE}
+library(tidyr)
+library(dplyr)
+```
+
+## Function
+
+Biallelic SV with coding regions
+```{r}
+
+biSV <- function(file,sample)
+{
+  require("dplyr")
+  sv <- read.delim(file,sep="\t", header=TRUE)
+  sv_split <- sv[sv$AnnotSV.type =="split",]
+  bisv <- sv_split %>%  filter(CDS.length > 0) %>% group_by(Gene.name) %>% summarise(n= n_distinct(Gene.name)) %>%  filter(n > 1)
+  return(bisv)
+}
+
+```
+
+Coding SV with predicted SNV damaging
+```{r}
+
+SNVSV <- function(file,sample)
+{
+  require("tidyr")
+  require("dplyr")
+  sv <- read.delim(file,sep="\t", header=TRUE, na.strings = "", fill=TRUE)
+  sv_split <- sv[sv$AnnotSV.type =="split",]
+  svsnv <- sv_split %>%  filter(CDS.length > 0)  %>% select(AnnotSV.ID,Gene.name,CDS.length,contains("compound"))  %>% select(AnnotSV.ID,Gene.name, CDS.length, contains(sample)) %>% drop_na()
+  write.table(svsnv,paste0(sample,"_codingSV_SNVdamaging.tsv"), sep="\t", row.names = FALSE)
+  return(svsnv)
+}
+
+```
+
+## Run
+
+Biallelic SV with coding regions
+```{r, echo=FALSE}
+biSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06166.pbsv2.20180823.sorted.annotated.tsv", sample="DNA17-06166")
+biSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06463.pbsv2.20180823.sorted.annotated.tsv", sample="DNA17-06463")
+biSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06468.pbsv2.20180823.sorted.annotated.tsv", sample="DNA17-06468")
+biSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06575.pbsv2.20180823.sorted.annotated.tsv", sample="DNA17-06575")
+biSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-07724.pbsv2.20180823.sorted.annotated.tsv", sample="DNA17-07724")
+
+```
+
+Coding SV with predicted SNV damaging
+```{r, echo=FALSE}
+SNVSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06166.pbsv2.20180823.sorted.annotated.tsv", sample="06166")
+SNVSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06463.pbsv2.20180823.sorted.annotated.tsv", sample="06463")
+SNVSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06468.pbsv2.20180823.sorted.annotated.tsv", sample="06468")
+SNVSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-06575.pbsv2.20180823.sorted.annotated.tsv", sample="06575")
+SNVSV(file = "~/SMRT_SV_Project/bionano/annotsv_cmp/hg38.DNA17-07724.pbsv2.20180823.sorted.annotated.tsv", sample="07724")
+```
